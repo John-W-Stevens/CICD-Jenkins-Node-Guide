@@ -1,6 +1,6 @@
 ### Create a CI/CD Pipeline in Jenkins for a Node.js App deployed on a DigitalOcean NodeJS droplet
 ###### Credit where credit is due:
-This guide is based off a guide written a little over 2 years ago by [Moshe Ezderman](https://medium.com/@mosheezderman/how-to-set-up-ci-cd-pipeline-for-a-node-js-app-with-jenkins-c51581cc783c). Despite my slightly different approach (I used different DigitalOcean droplets, didn't create additional users, had to install Java for Jenkins to work, used updated packages - which required changing a few things, added more tests, etc.) I would like to publicly thank (and give credit too) Mr. Ezderman for his very helpful guide.
+This guide is based off a guide written a little over 2 years ago by [Moshe Ezderman](https://medium.com/@mosheezderman/how-to-set-up-ci-cd-pipeline-for-a-node-js-app-with-jenkins-c51581cc783c). Despite my slightly different approach (I used different DigitalOcean droplets, didn't create additional users, had to install Java for Jenkins to work, used updated packages - which required changing a few things, added more tests, etc.) I am very much endebted to his work. I would like to publicly thank (and give credit too) Mr. Ezderman for his very helpful guide.
 
 #### Overview
 A user walking through this guide will get hands-on experience with the following:
