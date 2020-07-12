@@ -27,7 +27,7 @@ A user walking through this guide will get hands-on experience with the followin
 * cd node-app
 
 #### Step 3 - Create Node.js app
-* Create package.json file in node-app root directory (which you should already be)
+* Create package.json file in node-app root directory
 * Copy and paste this code into it:
    ```
     {
