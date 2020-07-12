@@ -1,6 +1,6 @@
 ### Create a CI/CD Pipeline in Jenkins for a Node.js App deployed on a DigitalOcean NodeJS droplet
 ###### Credit where credit is due:
-This guide is based off a guide written by [Moshe Ezderman](https://medium.com/@mosheezderman/how-to-set-up-ci-cd-pipeline-for-a-node-js-app-with-jenkins-c51581cc783c). Despite my slightly different approach (I used different pre-configured DigitalOcean droplets, didn't create additional users, had to install Java for Jenkins to work, etc.) I would like to publicly thank (and give credit too) Mr. Ezderman for this very helpful guide.
+This guide is based off a guide written a little over 2 years ago by [Moshe Ezderman](https://medium.com/@mosheezderman/how-to-set-up-ci-cd-pipeline-for-a-node-js-app-with-jenkins-c51581cc783c). Despite my slightly different approach (I used different DigitalOcean droplets, didn't create additional users, had to install Java for Jenkins to work, used updated packages - which required changing a few things, added more tests, etc.) I would like to publicly thank (and give credit too) Mr. Ezderman for his very helpful guide.
 
 #### Overview
 A user walking through this guide will get hands-on experience with the following:
@@ -36,28 +36,38 @@ A user walking through this guide will get hands-on experience with the followin
         "version": "0.0.1",
         "private": "true",
         "dependencies": {
-            "express": "3.12.0"
+            "express": "^4.17.1"
         },
         "devDependencies": {
-            "mocha": "1.20.1",
-            "supertest": "0.13.0"
+            "mocha": "^8.0.1",
+            "supertest": "^4.0.2"
         }
     }
     ```
 * Run ``` "npm install" ``` in node-app root directory
-* Create a new file, "node-app/index.js" and past this code into it:
+* Create a new file, "node-app/index.js" and paste this code into it:
     ``` 
     var express = require("express");
     var app = express();
 
     app.get("/", function(req, res){
-        res.send("Hello World. Jenkins is great!");
+        res.send("Hello, this is the base route.");
+    });
+    app.get("/waffles", function(req, res){
+        res.send("This route serves the Waffles resource.");
+    });
+    app.get("/pancakes", function(req, res){
+        res.send("This route serves the Pancakes resource.");
+    });
+    app.get("/french-toast", function(req, res){
+        res.send("This route serves the French-Toast resource.");
     });
 
     app.listen(process.env.PORT || 3001);
     module.exports = app;
+    ```
 * Test your app, run ``` "node index.js" ```
-* Navigate to ```http://localhost:3001``` and you should see "Hello World. Jenkins is great!"
+* Navigate to ```http://localhost:3001``` and you should see "Hello, this is the base route." Try "/waffles", "/pancakes", and "/french-toast"
 
 #### Step 4 - Add a test to Node.js app
 * In node-app root directory create "/test/" directory (run: ``` mkdir test ```)
@@ -68,16 +78,34 @@ A user walking through this guide will get hands-on experience with the followin
     var app = require('../index.js');
 
     describe('GET /', function(){
-        it('respond with hello world', function(done){
-            request(app).get('/').expect('Hello World. Jenkins is great!', done);
+        it('respond with base route', function(done){
+            request(app).get('/').expect('Hello, this is the base route.', done);
+        });
+    });
+
+    describe('GET /waffles', function(){
+        it('respond with waffles resource', function(done){
+            request(app).get('/waffles').expect('This route serves the Waffles resource.', done);
+        });
+    });
+
+    describe('GET /pancakes', function(){
+        it('respond with pancakes resource', function(done){
+            request(app).get('/pancakes').expect('This route serves the Pancakes resource.', done);
+        });
+    });
+
+    describe('GET /french-toast', function(){
+        it('respond with french-toast resource', function(done){
+            request(app).get('/french-toast').expect('This route serves the French-Toast resource.', done);
         });
     });
     ```
 * Make sure your test works, run this command from node-app root directory:
     ```
-    ./node_modules/.bin/_mocha ./test/test.js
+    ./node_modules/.bin/_mocha ./test/test.js --exit
     ```
-* ###### You should see "1 passing" in your terminal. If not, review the code above.
+* ###### You should see "4 passing" in your terminal. If not, review the code above.
 
 #### Step 5 - Add a script to Node.js app
 * In node-app root directory create "/script/" directory (run: ``` mkdir script ```)
@@ -85,7 +113,7 @@ A user walking through this guide will get hands-on experience with the followin
     ```
     #!/bin/sh
     
-    ./node_modules/.bin/_mocha ./test/test.js
+    ./node_modules/.bin/_mocha ./test/test.js --exit
     ```
 * Grant executable permission, run this command in the node-app root directory:
     ```
@@ -95,7 +123,7 @@ A user walking through this guide will get hands-on experience with the followin
     ```
     ./script/test
     ```
-* ###### You should see "1 passing" in your terminal. If not, review the code above.
+* ###### You should see "4 passing" in your terminal. If not, review the code above.
 
 #### Step 6 - Push code to GitHub
 * Run the following command in the node-app root directory:
@@ -164,11 +192,8 @@ A user walking through this guide will get hands-on experience with the followin
 * Navigate to ```http://JENKINS.SERVER.IP:8080``` (you should see Jenkins homepage saying something about unlocking Jenkins)
 
 #### Step 12 - Unlock Jenkins
-* Open the Jenkins admin password in VIM by running this command:
-    ```
-    sudo vim /var/lib/jenkins/secrets/initialAdminPassword
-    ```
-* Copy the password to clipboard and then exit VIM (esc, :wq, enter)
+* Open the Jenkins admin password in VIM (run: ``` sudo vim /var/lib/jenkins/secrets/initialAdminPassword```)
+* Copy the password to clipboard and exit VIM (:wq, enter)
 * Use this password to unlock Jenkins
 * Select "Install Suggested Plugins"
 * After Jenkins finishes configuring, follow the "Create First Admin User" instructions
@@ -272,5 +297,62 @@ A user walking through this guide will get hands-on experience with the followin
 * Click "Save".
 * Add, commit, and push changes from local node-app repo to GitHub repo
 
-#### Now, try it out! 
-You should be able to make changes to your node-app, and see them reflected at the node-app public ip address, only if the changes pass your tests. To test this out, change index.js and test.js (so that they are matching). When you you commit and push changes, Jenkins will run your test and then re-deploy node-app if tests are successful. Read through the jobs/error reports in the Jenkins console.
+#### Now, test it out! 
+* ##### Test for failure:
+    * Modify the "/waffles" route in index.js to this:
+    ```
+    app.get("/waffles", function(req, res){
+        res.send("This route serves the Chocolate-Frosted-Suger-Bombs resource.");
+    });
+    ``` 
+    * Add, commit, and push these changes.
+    * In the Jenkins console you will see a failure to build.
+    * CLick on the little red dot to open console output
+    * Towards the bottom you will see 
+    ```
+      3 passing (57ms)
+    1 failing
+
+    1) GET /waffles
+        respond with waffles resource:
+        Error: expected 'This route serves the Waffles resource.' response body, got 'This route serves the Chocolate-Frosted-Sugar-Bombs resource.'
+        at error (node_modules/supertest/lib/test.js:301:13)
+        at Test._assertBody (node_modules/supertest/lib/test.js:218:14)
+        at Test._assertFunction (node_modules/supertest/lib/test.js:283:11)
+        at Test.assert (node_modules/supertest/lib/test.js:173:18)
+        at Server.localAssert (node_modules/supertest/lib/test.js:131:12)
+        at emitCloseNT (net.js:1655:8)
+        at processTicksAndRejections (internal/process/task_queues.js:83:21)
+
+    Build step 'Execute shell' marked build as failure
+    Finished: FAILURE
+    ```
+    * Now browse to ```http://NODE.SERVER.IP/3001/Waffles```
+    * You will see ``` This route serves the Waffles resource.```
+    * This means that Jenkins did not re-deploy the application because one of the tests failed.
+* ##### Test for Success
+    * Change the waffles route back to what it was initially:
+    ```
+    app.get("/waffles", function(req, res){
+        res.send("This route serves the Waffles resource.");
+    });
+    ```
+    * Now change the base route in index.js to this:
+    ```
+    app.get("/", function(req, res){
+        res.send("Hello, this is the base route! Jenkins is nifty!");
+    });
+    ```
+    * Change the base route test in node-app/test/test.js to this:
+    ```
+    app.get("/", function(req, res){
+        res.send("Hello, this is the base route! Jenkins is nifty!");
+    });
+    ```
+    * Add, commit, and push these changes.
+    * In the Jenkins console you will see the build is successful
+    * Now browse to ```http://NODE.SERVER.IP/3001```
+    * You will see ```Hello, this is the base route! Jenkins is nifty!```
+    * Jenkins re-deployed our application for us because all the tests passed.
+
+I recommend playing around with this a bit and spending some time reading through the error logs in the Jenkins Console. Official Jenkins documentation can be found [here](https://www.jenkins.io/doc/). Read more about CI/CD [here](https://www.redhat.com/en/topics/devops/what-is-ci-cd).
